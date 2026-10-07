@@ -50,6 +50,14 @@ public class Payment
         Status = PaymentStatus.Succeeded;
         PaidAt = DateTimeOffset.UtcNow;
     }
+
+    public void MarkAsFailed()
+    {
+        if (Status != PaymentStatus.Pending)
+            throw new InvalidOperationException("Only a pending payment can be marked as failed.");
+
+        Status = PaymentStatus.Failed;
+    }
 }
 
 public enum PaymentMethod

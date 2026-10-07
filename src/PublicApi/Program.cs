@@ -18,11 +18,13 @@ using Infrastructure.Data;
 using Infrastructure.Data.Repositories;
 using Infrastructure.Data.Repositories.Catalog;
 using Infrastructure.Data.Repositories.Orders;
+using Infrastructure.Data.Repositories.Payments;
 using Infrastructure.Data.Repositories.Shopping;
 using Infrastructure.Data.Repositories.Warehousing;
 using Infrastructure.Data.Repositories.Fulfillment;
 using Infrastructure.Data.Repositories.Shipping;
 using Infrastructure.Identity;
+using Infrastructure.Payments;
 using Infrastructure.Storage.Catalog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -101,6 +103,7 @@ builder.Services
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.Configure<VnPayOptions>(builder.Configuration.GetSection(VnPayOptions.SectionName));
 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -124,6 +127,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IShippingProfileRepository, ShippingProfileRepository>();
 builder.Services.AddScoped<IShippingProfileService, ShippingProfileService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddSingleton<IVnPayGateway, VnPayGateway>();
 builder.Services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
 builder.Services.AddScoped<IInventoryReservationRepository, InventoryReservationRepository>();

@@ -34,6 +34,27 @@ public sealed class PaymentController : ControllerBase
         });
     }
 
+    [HttpPost("vnpay")]
+    public async Task<IActionResult> CreateVnPayPayment(Guid orderId)
+    {
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+        var payment = await _paymentService.CreateVnPayPaymentAsync(GetUserId(), orderId, ipAddress);
+        return StatusCode(StatusCodes.Status201Created, new ApiResponse<VnPayPaymentSessionResponse>
+        {
+            StatusCode = StatusCodes.Status201Created,
+            Message = "VNPay payment session created successfully.",
+            Data = new VnPayPaymentSessionResponse { PaymentId = payment.PaymentId, PaymentUrl = payment.PaymentUrl }
+        });
+    }
+
+    [HttpGet("{paymentId:guid}")]
+    public async Task<IActionResult> GetPayment(Guid orderId, Guid paymentId)
+    {
+        var payment = await _paymentService.GetPaymentForUserAsync(GetUserId(), paymentId);
+        if (payment.OrderId != orderId) throw new NotFoundException("Payment not found.");
+        return Ok(new ApiResponse<PaymentResponse> { StatusCode = 200, Message = "Payment retrieved successfully.", Data = ToResponse(payment) });
+    }
+
     private Guid GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
