@@ -8,6 +8,7 @@ MiniStore là hệ thống thương mại điện tử theo mô hình quản lý
 
 - [Phạm vi và vai trò](#phạm-vi-và-vai-trò)
 - [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
+- [Mô hình dữ liệu nghiệp vụ](#mô-hình-dữ-liệu-nghiệp-vụ-erd-rút-gọn)
 - [Cấu trúc mã nguồn và trách nhiệm](#cấu-trúc-mã-nguồn-và-trách-nhiệm)
 - [Các luồng nghiệp vụ](#các-luồng-nghiệp-vụ)
 - [Tổng quan API](#tổng-quan-api)
@@ -45,6 +46,139 @@ Dự án áp dụng hướng phân tách trách nhiệm gần với Clean Archit
 - **Infrastructure** hiện thực interface bằng EF Core/SQL Server, JWT, refresh token, file storage, email và VNPay.
 
 Điểm quan trọng: VNPay là một công nghệ bên ngoài nên phần tạo URL, HMAC-SHA512 và kiểm tra callback nằm trong `Infrastructure/Payments`; nghiệp vụ quyết định khi nào thanh toán được phép thành công vẫn nằm trong `ApplicationCore/Services/Payments`.
+
+## Mô hình dữ liệu nghiệp vụ (ERD rút gọn)
+
+```mermaid
+erDiagram
+    ROLE ||--o{ USER : "phân quyền"
+    USER ||--|| CART : "sở hữu"
+    USER ||--o{ SHIPPING_PROFILE : "lưu địa chỉ"
+    USER ||--o{ ORDER : "đặt"
+
+    CATEGORY ||--o{ PRODUCT : "phân loại"
+    PRODUCT ||--o{ PRODUCT_IMAGE : "có ảnh"
+    CART ||--|{ CART_ITEM : "gồm"
+    PRODUCT ||--o{ CART_ITEM : "được thêm"
+
+    ORDER ||--|{ ORDER_ITEM : "gồm"
+    PRODUCT ||--o{ ORDER_ITEM : "được đặt"
+    ORDER ||--o{ PAYMENT : "có lịch sử thanh toán"
+    ORDER ||--o{ SHIPMENT : "tách thành"
+
+    WAREHOUSE ||--o{ INVENTORY : "chứa"
+    PRODUCT ||--o{ INVENTORY : "được lưu"
+    ORDER_ITEM ||--o{ INVENTORY_RESERVATION : "giữ tồn"
+    INVENTORY ||--o{ INVENTORY_RESERVATION : "bị giữ"
+    INVENTORY ||--o{ INVENTORY_TRANSACTION : "biến động"
+    USER ||--o{ INVENTORY_TRANSACTION : "thực hiện"
+
+    SHIPMENT ||--|{ SHIPMENT_ITEM : "gồm"
+    ORDER_ITEM ||--o{ SHIPMENT_ITEM : "được đóng gói"
+    PRODUCT ||--o{ SHIPMENT_ITEM : "là sản phẩm"
+
+    ROLE {
+        uuid Id PK
+        string Name
+    }
+    USER {
+        uuid Id PK
+        uuid RoleId FK
+        string Email
+    }
+    SHIPPING_PROFILE {
+        uuid Id PK
+        uuid UserId FK
+        string ShippingAddress
+        bool IsDefault
+    }
+    CART {
+        uuid Id PK
+        uuid UserId FK
+    }
+    CART_ITEM {
+        uuid Id PK
+        uuid CartId FK
+        uuid ProductId FK
+        int Quantity
+    }
+    CATEGORY {
+        uuid Id PK
+        string Name
+    }
+    PRODUCT {
+        uuid Id PK
+        uuid CategoryId FK
+        string Name
+        decimal SellingPrice
+    }
+    PRODUCT_IMAGE {
+        uuid Id PK
+        uuid ProductId FK
+        string ImageUrl
+    }
+    ORDER {
+        uuid Id PK
+        uuid UserId FK
+        decimal TotalAmount
+        string Status
+        string ShippingAddressSnapshot
+    }
+    ORDER_ITEM {
+        uuid Id PK
+        uuid OrderId FK
+        uuid ProductId FK
+        int Quantity
+        decimal UnitPriceSnapshot
+    }
+    PAYMENT {
+        uuid Id PK
+        uuid OrderId FK
+        decimal Amount
+        string Method
+        string Status
+    }
+    WAREHOUSE {
+        uuid Id PK
+        string Code
+        string Status
+    }
+    INVENTORY {
+        uuid Id PK
+        uuid WarehouseId FK
+        uuid ProductId FK
+        int OnHand
+        int Reserved
+    }
+    INVENTORY_RESERVATION {
+        uuid Id PK
+        uuid InventoryId FK
+        uuid OrderItemId FK
+        int Quantity
+    }
+    INVENTORY_TRANSACTION {
+        uuid Id PK
+        uuid InventoryId FK
+        uuid CreatedByUserId FK
+        int QuantityChange
+    }
+    SHIPMENT {
+        uuid Id PK
+        uuid OrderId FK
+        uuid WarehouseId FK
+        string Status
+        string TrackingNumber
+    }
+    SHIPMENT_ITEM {
+        uuid Id PK
+        uuid ShipmentId FK
+        uuid OrderItemId FK
+        uuid ProductId FK
+        int Quantity
+    }
+```
+
+**Cách đọc ERD:** đây là sơ đồ nghiệp vụ rút gọn, không thay thế migration/EF configuration. `Order` lưu snapshot tên người nhận, điện thoại, địa chỉ và ghi chú tại thời điểm checkout; do đó không nối trực tiếp Order với `ShippingProfile`. `OrderItem` cũng giữ `UnitPrice` tại thời điểm đặt để giá Product thay đổi sau này không làm lệch lịch sử đơn.
 
 ## Cấu trúc mã nguồn và trách nhiệm
 
