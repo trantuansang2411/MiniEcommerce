@@ -1,0 +1,12 @@
+using System.Security.Claims; using ApplicationCore.Entities.Fulfillment; using ApplicationCore.Exceptions; using ApplicationCore.Interfaces.Fulfillment; using Microsoft.AspNetCore.Authorization; using Microsoft.AspNetCore.Mvc; using PublicApi.DTOs.Requests.Fulfillment; using PublicApi.DTOs.Responses; using PublicApi.DTOs.Responses.Fulfillment;
+namespace PublicApi.Controllers.Fulfillment;
+[ApiController][Route("api/shipments")]
+public sealed class ShipmentController:ControllerBase
+{ private readonly IShipmentService _service; public ShipmentController(IShipmentService s)=>_service=s;
+ [Authorize(Roles="Admin,Manager,Staff")][HttpGet] public async Task<IActionResult> GetAll([FromQuery] ShipmentStatus? status)=>Ok(OkResponse((await _service.GetAllAsync(status)).Select(Map).ToList(),"Shipments retrieved successfully."));
+ [Authorize(Roles="Staff")][HttpGet("{id:guid}")] public async Task<IActionResult> GetDetail(Guid id)=>Ok(OkResponse(MapDetail(await _service.GetDetailAsync(id)),"Shipment retrieved successfully."));
+ [Authorize(Roles="Staff")][HttpPatch("{id:guid}/status")] public async Task<IActionResult> Update(Guid id,UpdateShipmentStatusRequest r)=>Ok(OkResponse(Map(await _service.UpdateStatusAsync(UserId(),id,r.Status,r.ShippingProvider,r.TrackingNumber)),"Shipment status updated successfully."));
+ internal static ShipmentResponse Map(Shipment x)=>new(){Id=x.Id,OrderId=x.OrderId,WarehouseId=x.WarehouseId,Status=x.Status.ToString(),ShippingProvider=x.ShippingProvider,TrackingNumber=x.TrackingNumber,Items=x.Items.Select(i=>new ShipmentItemResponse{ProductId=i.ProductId,Quantity=i.Quantity}).ToList()};
+ internal static ShipmentDetailResponse MapDetail(Shipment x)=>new(){Id=x.Id,OrderId=x.OrderId,Status=x.Status.ToString(),ShippingProvider=x.ShippingProvider,TrackingNumber=x.TrackingNumber,CreatedAt=x.CreatedAt,ShippedAt=x.ShippedAt,DeliveredAt=x.DeliveredAt,Delivery=new(){RecipientName=x.Order.RecipientName,RecipientPhone=x.Order.RecipientPhone,ShippingAddress=x.Order.ShippingAddress,DeliveryNote=x.Order.DeliveryNote},Items=x.Items.Select(i=>new ShipmentDetailItemResponse{ProductId=i.ProductId,ProductName=i.Product.Name,ThumbnailUrl=i.Product.ThumbnailUrl,Quantity=i.Quantity}).ToList()};
+ private Guid UserId(){if(!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier),out var id))throw new UnauthorizedException("User is not authenticated.");return id;}
+ private static ApiResponse<T> OkResponse<T>(T d,string m)=>new(){StatusCode=200,Message=m,Data=d}; }

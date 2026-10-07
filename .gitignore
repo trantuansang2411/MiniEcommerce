@@ -1,0 +1,37 @@
+# .NET build artifacts and IDE settings
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Next.js and package manager output
+src/Frontend/node_modules/
+src/Frontend/.next/
+src/Frontend/out/
+
+# Local configuration (commit a sanitized *.example file instead, if needed)
+.env
+.env.*
+!.env.example
+!**/.env.example
+src/PublicApi/appsettings.Development.json
+
+# Local uploads generated through the product-management workflow
+src/PublicApi/wwwroot/uploads/
+src/PublicApi/uploads/
+
+# Development-only scraped sample catalog and its logs
+data/tgdd-sample-products/
+data/*.log
+tools/collect_tgdd_sample_products.py
+tools/__pycache__/
+tools/*.py[cod]
+src/PublicApi/Development/TgddSampleProductImporter.cs
+
+# Local tooling caches and diagnostics
+.codegraph/
+.diagnostics/
+.build-validation/
+.tmp/
+src/PublicApi/.build/
