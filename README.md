@@ -3,7 +3,9 @@
 MiniStore là hệ thống thương mại điện tử theo mô hình quản lý bán hàng và vận hành giao nhận. Dự án bao gồm trải nghiệm mua hàng cho khách, khu vực xử lý shipment cho Staff, theo dõi đơn cho Manager và quản trị catalog/kho cho Admin.
 
 > README này mô tả nghiệp vụ theo hành trình thực tế trước, sau đó mới đi vào kiến trúc, API và cách chạy dự án.
+## Video demo
 
+> Thêm link video demo tại đây: **[Xem video demo](https://drive.google.com/drive/u/1/folders/1UKbMPotq9taU9ZnoZIAnoM9pcBehTqtu?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto)**
 ## Mục lục
 
 - [Phạm vi và vai trò](#phạm-vi-và-vai-trò)
@@ -623,7 +625,7 @@ dotnet build src/PublicApi/PublicApi.csproj
 
 ## Video demo
 
-> Thêm link video demo tại đây: **[Xem video demo](#)**
+> Thêm link video demo tại đây: **[Xem video demo](https://drive.google.com/drive/u/1/folders/1UKbMPotq9taU9ZnoZIAnoM9pcBehTqtu?dmr=1&ec=wgc-drive-%5Bmodule%5D-goto)**
 
 Kịch bản quay đề xuất:
 
